@@ -2,7 +2,7 @@ FROM php:cli-alpine AS base
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache icu libpng freetype libzip libjpeg-turbo imagemagick docker \
+    && apk add --no-cache icu libpng freetype libzip libjpeg-turbo imagemagick docker mysql-client \
     && apk add --no-cache --virtual build-dependencies icu-dev libxml2-dev freetype-dev libzip-dev libpng-dev \
         libjpeg-turbo-dev g++ make autoconf imagemagick-dev \
     && docker-php-source extract \
