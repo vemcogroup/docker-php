@@ -2,13 +2,13 @@ FROM php:cli-alpine AS base
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache docker mysql-client libzip icu \
-    && apk add --no-cache --virtual build-dependencies g++ make autoconf icu-dev libzip-dev \
+    && apk add --no-cache docker mysql-client libpng libzip icu \
+    && apk add --no-cache --virtual build-dependencies g++ make autoconf icu-dev libzip-dev libpng-dev \
     && docker-php-source extract \
     && pecl upgrade redis \
     && docker-php-ext-enable redis \
     && docker-php-source delete \
-    && docker-php-ext-install -j$(nproc) pdo_mysql intl zip bcmath calendar pcntl exif opcache \
+    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache \
     && apk del build-dependencies \
     && rm -rf /tmp/*
 
