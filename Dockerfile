@@ -1,4 +1,4 @@
-FROM php:cli-alpine AS base
+FROM php:fpm-alpine3.9 AS base
 
 RUN set -ex \
   	&& apk update \
