@@ -2,11 +2,12 @@ FROM php:fpm-alpine3.9 AS base
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache docker mysql-client libpng libzip icu \
-    && apk add --no-cache --virtual build-dependencies g++ make autoconf icu-dev libzip-dev libpng-dev \
+    && apk add --no-cache docker mysql-client libpng libzip icu libjpeg-turbo imagemagick \
+    && apk add --no-cache --virtual build-dependencies g++ make autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev \
+        libjpeg-turbo-dev g++ make autoconf imagemagick-dev \
     && docker-php-source extract \
-    && pecl upgrade redis \
-    && docker-php-ext-enable redis \
+    && pecl upgrade redis imagick \
+    && docker-php-ext-enable redis imagick \
     && docker-php-source delete \
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache \
     && apk del build-dependencies \
