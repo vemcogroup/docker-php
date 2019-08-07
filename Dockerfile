@@ -14,6 +14,8 @@ RUN set -ex \
     && rm -rf /tmp/*
 
 COPY vemcount.ini /usr/local/etc/php/conf.d/vemcount.ini
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 
 ENV TZ UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
