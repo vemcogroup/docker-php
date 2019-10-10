@@ -19,7 +19,7 @@ COPY www.conf /usr/local/etc/php-fpm.d/www.conf
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 RUN sed -i 's/access.log/;access.log/g' /usr/local/etc/php-fpm.d/docker.conf
-echo -e "log_level = notice\n" >> /usr/local/etc/php-fpm.d/docker.conf
+RUN echo -e "log_level = notice\n" >> /usr/local/etc/php-fpm.d/docker.conf
 
 ENV TZ UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
