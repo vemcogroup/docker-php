@@ -3,8 +3,8 @@ FROM php:fpm-alpine3.10 AS base
 RUN set -ex \
   	&& apk update \
     && apk add --no-cache docker mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python py-pip make zip \
-    && apk add --no-cache --virtual build-dependencies g++ make autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev \
-        libxml2-dev libjpeg-turbo-dev g++ make autoconf imagemagick-dev \
+    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev \
+        libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev \
     && docker-php-source extract \
     && pecl upgrade redis imagick \
     && docker-php-ext-enable redis imagick \
