@@ -2,7 +2,7 @@ FROM php:fpm-alpine3.10 AS base
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache docker mysql-client libpng libzip icu libjpeg-turbo imagemagick \
+    && apk add --no-cache docker mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python py-pip make zip \
     && apk add --no-cache --virtual build-dependencies g++ make autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev \
         libxml2-dev libjpeg-turbo-dev g++ make autoconf imagemagick-dev \
     && docker-php-source extract \
@@ -19,7 +19,7 @@ COPY www.conf /usr/local/etc/php-fpm.d/www.conf
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 RUN sed -i 's/access.log/;access.log/g' /usr/local/etc/php-fpm.d/docker.conf
-RUN echo -e "log_level = notice\n" >> /usr/local/etc/php-fpm.d/docker.conf
+RUN sed -i 's/;log_level = notice/log_level = warning/g' /usr/local/etc/php-fpm.conf
 
 ENV TZ UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
