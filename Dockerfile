@@ -1,4 +1,4 @@
-FROM php:fpm-alpine3.10 AS base
+FROM php:7.4-fpm-alpine AS base
 
 RUN set -ex \
   	&& apk update \
@@ -6,8 +6,8 @@ RUN set -ex \
     && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev \
         libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev \
     && docker-php-source extract \
-    && pecl upgrade redis imagick \
-    && docker-php-ext-enable redis imagick \
+    && pecl upgrade redis imagick igbinary \
+    && docker-php-ext-enable redis imagick igbinary \
     && docker-php-source delete \
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap \
     && apk del build-dependencies \
