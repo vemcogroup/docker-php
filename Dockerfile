@@ -2,14 +2,22 @@ FROM php:7.4-fpm-alpine AS base
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache docker lz4 mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip \
-    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev \
-        libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev \
+    && apk add --no-cache docker lz4 lz4-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip \
+    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev \
     && docker-php-source extract \
-    && pecl upgrade redis imagick igbinary \
-    && docker-php-ext-enable redis imagick igbinary \
+
+    && mkdir -p /tmp/phpredis \
+        && curl -L https://pecl.php.net/get/redis | tar xvz -C /tmp/phpredis --strip 1 \
+        && cd /tmp/phpredis \
+        && phpize \
+        && ./configure --enable-redis-lz4 --with-liblz4=/usr/lib/ \
+        && make && make install \
+
+    && pecl upgrade imagick \
+    && docker-php-ext-enable redis imagick \
     && docker-php-source delete \
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap \
+
     && apk del build-dependencies \
     && rm -rf /tmp/*
 
