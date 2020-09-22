@@ -18,6 +18,10 @@ RUN set -ex \
     && docker-php-source delete \
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap \
 
+    && pip install awscli \
+    && curl -sLO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl \
+    && chmod +x ./kubectl \
+
     && apk del build-dependencies \
     && rm -rf /tmp/*
 
