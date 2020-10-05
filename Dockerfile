@@ -1,10 +1,18 @@
 FROM php:7.4-fpm-alpine AS base
 
+ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
+
 RUN set -ex \
   	&& apk update \
     && apk add --no-cache docker lz4 lz4-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip \
-    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev \
+    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev cmake musl-dev gcc gettext-dev libintl \
     && docker-php-source extract \
+
+    && wget https://gitlab.com/rilian-la-te/musl-locales/-/archive/master/musl-locales-master.zip \
+        && unzip musl-locales-master.zip \
+        && cd musl-locales-master \
+        && cmake -DLOCALE_PROFILE=OFF -D CMAKE_INSTALL_PREFIX:PATH=/usr . && make && make install \
+        && cd .. && rm -r musl-locales-master \
 
     && mkdir -p /tmp/phpredis \
         && curl -L https://pecl.php.net/get/redis | tar xvz -C /tmp/phpredis --strip 1 \
@@ -36,7 +44,6 @@ RUN sed -i 's/;log_level = notice/log_level = warning/g' /usr/local/etc/php-fpm.
 
 ENV TZ UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
 
 ## NEW LAYER
 FROM base AS composer
