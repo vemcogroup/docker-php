@@ -1,11 +1,10 @@
 FROM php:7.4-fpm-alpine AS base
-
 ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
 
 RUN set -ex \
   	&& apk update \
     && apk add --no-cache docker lz4 lz4-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip \
-    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev cmake musl-dev gcc gettext-dev libintl \
+    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev cmake musl-dev gcc gettext-dev libintl postgresql-dev \
     && docker-php-source extract \
 
     && wget https://gitlab.com/rilian-la-te/musl-locales/-/archive/master/musl-locales-master.zip \
@@ -24,7 +23,7 @@ RUN set -ex \
     && pecl upgrade imagick \
     && docker-php-ext-enable redis imagick \
     && docker-php-source delete \
-    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap \
+    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql \
 
     && pip install awscli \
     && curl -sLO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl \
@@ -51,4 +50,4 @@ FROM base AS composer
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_MEMORY_LIMIT -1
 ENV COMPOSER_HOME ./.composer
-COPY --from=composer:1.9 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
