@@ -3,7 +3,7 @@ ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache docker lz4 lz4-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip \
+    && apk add --no-cache docker lz4 lz4-dev libevent-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip libpq \
     && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev cmake musl-dev gcc gettext-dev libintl postgresql-dev \
     && docker-php-source extract \
 
@@ -20,10 +20,12 @@ RUN set -ex \
         && ./configure --enable-redis-lz4 --with-liblz4=/usr/lib/ \
         && make && make install \
 
-    && pecl upgrade imagick \
+    && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets \
+    && pecl upgrade imagick event \
     && docker-php-ext-enable redis imagick \
+    && docker-php-ext-enable --ini-name zz-event.ini event \
     && docker-php-source delete \
-    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql \
 
     && pip install awscli \
     && curl -sLO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl \
