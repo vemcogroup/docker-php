@@ -4,10 +4,10 @@ build: up2date
 build-8: up2date
 	docker build . -t 8.0
 
-multi-tag-and-push: up2date
+multi-tag-and-push-74: up2date
 	docker buildx build .  --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:7.4 --push
 
-multi-tag-and-push-8: up2date
+multi-tag-and-push-80: up2date
 	docker buildx build .  --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:8.0 --push
 
 tag:
