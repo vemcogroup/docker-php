@@ -3,7 +3,7 @@ ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache docker lz4 lz4-dev libevent-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip libpq \
+    && apk add --no-cache yarn docker lz4 lz4-dev libevent-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip libpq \
     && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev cmake musl-dev gcc gettext-dev libintl postgresql-dev \
     && docker-php-source extract \
 
