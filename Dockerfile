@@ -1,10 +1,10 @@
-FROM php:8.0-fpm-alpine AS base
+FROM php:8.0.7-fpm-alpine AS base
 ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
 
 RUN set -ex \
   	&& apk update \
-    && apk add --no-cache yarn docker lz4 lz4-dev libevent-dev mysql-client libpng libzip icu libjpeg-turbo imagemagick openssh-client git rsync curl jq python3 py-pip make zip libpq \
-    && apk add --no-cache --virtual build-dependencies g++ autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ imagemagick-dev cmake musl-dev gcc gettext-dev libintl postgresql-dev \
+    && apk add --no-cache yarn docker lz4 lz4-dev libevent-dev mysql-client libpng libzip icu libjpeg-turbo openssh-client git rsync curl jq python3 py-pip make zip libpq \
+    && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev libintl postgresql-dev \
     && docker-php-source extract \
 
     && wget https://gitlab.com/rilian-la-te/musl-locales/-/archive/master/musl-locales-master.zip \
@@ -20,19 +20,15 @@ RUN set -ex \
         && ./configure --enable-redis-lz4 --with-liblz4=/usr/lib/ \
         && make && make install \
 
-    && mkdir -p /tmp/imagick \
-       && git clone https://github.com/Imagick/imagick \
-       && cd imagick \
-       && phpize && ./configure \
-       && make \
-       && make install \
-       && cd .. && rm -fr imagick \
-
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets \
-    && pecl upgrade event-beta xdebug \
+    && pecl upgrade event-beta xdebug sqlsrv-5.9.0 pdo_sqlsrv-5.9.0 \
 
-    && docker-php-ext-enable redis imagick \
+    && cd /tmp && curl -O https://download.microsoft.com/download/e/4/e/e4e67866-dffd-428c-aac7-8d28ddafb39b/msodbcsql17_17.7.2.1-1_amd64.apk \
+    && yes | apk add --allow-untrusted msodbcsql17_17.7.2.1-1_amd64.apk \
+    && rm -fr msodbcsql17_17.7.2.1-1_amd64.apk \
+
+    && docker-php-ext-enable redis \
     && docker-php-ext-enable --ini-name zz-event.ini event \
     && docker-php-source delete \
 
