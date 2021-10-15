@@ -9,7 +9,16 @@ RUN set -ex \
     && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev libintl postgresql-dev \
     && docker-php-source extract \
 
-    && wget https://gitlab.com/rilian-la-te/musl-locales/-/archive/master/musl-locales-master.zip \
+    && wget https://s3.amazonaws.com/atatus-artifacts/atatus-php/downloads/atatus-php-1.12.0-x64-musl.tar.gz -P /usr \
+    && cd /usr && tar -xzf atatus-php-*-musl.tar.gz \
+    && cd atatus-php-*-musl \
+    && sh install.sh && cd /usr && rm -fr atatus* \
+    && sed -i "s/extension=\"atatus.so\"/; extension=\"atatus.so\"/g" /usr/local/etc/php/conf.d/atatus.ini \
+    && sed -i "s/atatus.framework = \"\"/atatus.framework = \"Laravel\"/g" /usr/local/etc/php/conf.d/atatus.ini \
+    && sed -i "s/laravel.enable_queues = false/laravel.enable.queues = true/g" /usr/local/etc/php/conf.d/atatus.ini \
+    && sed -i "s/atatus.sql.capture = \"normalized\"/atatus.sql.capture = \"raw\"/g" /usr/local/etc/php/conf.d/atatus.ini \
+
+    && cd /tmp && wget https://gitlab.com/rilian-la-te/musl-locales/-/archive/master/musl-locales-master.zip \
         && unzip musl-locales-master.zip \
         && cd musl-locales-master \
         && cmake -DLOCALE_PROFILE=OFF -D CMAKE_INSTALL_PREFIX:PATH=/usr . && make && make install \
