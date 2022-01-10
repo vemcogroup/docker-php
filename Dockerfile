@@ -9,7 +9,7 @@ RUN set -ex \
     && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev libintl postgresql-dev \
     && docker-php-source extract \
 
-    && wget https://atatus-artifacts.s3.amazonaws.com/atatus-php/downloads/atatus-php-1.12.1-d2-x64-musl.tar.gz -P /usr \
+    && wget https://atatus-artifacts.s3.amazonaws.com/atatus-php/downloads/atatus-php-1.13.0-d1-x64-musl.tar.gz -P /usr \
     && cd /usr && tar -xzf atatus-php-*-musl.tar.gz \
     && cd atatus-php-*-musl \
     && sh install.sh && cd /usr && rm -fr atatus* \
