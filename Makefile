@@ -1,7 +1,9 @@
-TAG = 8.0.14
+TAG = 8.0.16
+#TAG = 8.1.2
 DOCKER_SERVER = nuc
 
-build-8: up2date
+build: up2date
+	docker pull php:$(TAG)-fpm-alpine
 	docker build --build-arg TAG=$(TAG) -t $(TAG) .
 
 tag-and-push-8x: up2date
@@ -11,11 +13,30 @@ tag-and-push-8x: up2date
 external-tag-and-push-80: up2date
 	docker pull php:$(TAG)-fpm-alpine
 
-#	TAG=$(TAG) DOCKER_SERVER=$(DOCKER_SERVER) bash build.sh
+	TAG=$(TAG) DOCKER_SERVER=$(DOCKER_SERVER) bash build.sh
+
+	docker pull vemcogroup/php-cli:8.0-amd64
+
+	docker manifest rm vemcogroup/php-cli:8.0 &
+	docker manifest rm vemcogroup/php-cli:$(TAG) &
 
 	docker manifest create vemcogroup/php-cli:8.0 --amend vemcogroup/php-cli:8.0-amd64 --amend vemcogroup/php-cli:8.0-arm64
 	docker manifest create vemcogroup/php-cli:$(TAG) --amend vemcogroup/php-cli:8.0-amd64 --amend vemcogroup/php-cli:8.0-arm64
+
 	docker manifest push vemcogroup/php-cli:8.0
+	docker manifest push vemcogroup/php-cli:$(TAG)
+
+external-tag-and-push-81: up2date
+	docker pull php:$(TAG)-fpm-alpine
+
+	TAG=$(TAG) DOCKER_SERVER=$(DOCKER_SERVER) bash build.sh
+
+	docker pull vemcogroup/php-cli:8.1-amd64
+
+	docker manifest create vemcogroup/php-cli:8.1 --amend vemcogroup/php-cli:8.1-amd64 --amend vemcogroup/php-cli:8.1-arm64
+	docker manifest create vemcogroup/php-cli:$(TAG) --amend vemcogroup/php-cli:8.1-amd64 --amend vemcogroup/php-cli:8.1-arm64
+
+	docker manifest push vemcogroup/php-cli:8.1
 	docker manifest push vemcogroup/php-cli:$(TAG)
 
 tag-and-push-80: up2date
