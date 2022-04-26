@@ -73,3 +73,8 @@ ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_MEMORY_LIMIT -1
 ENV COMPOSER_HOME ./.composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# NEW LAYER
+
+FROM composer AS docker
+COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx

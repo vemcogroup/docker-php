@@ -8,7 +8,10 @@ build: up2date
 
 tag-and-push-8x: up2date
 	docker pull php:$(TAG)-fpm-alpine
-	docker buildx build --build-arg TAG=$(TAG) . --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:$(TAG) --push
+	docker buildx build --build-arg TAG=$(TAG) . --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:8.1  -t vemcogroup/php-cli:$(TAG) --push
+
+tag-and-push-80: up2date
+	docker buildx build --build-arg TAG=$(TAG) . --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:8.0 -t vemcogroup/php-cli:$(TAG) --push
 
 external-tag-and-push-80: up2date
 	docker pull php:$(TAG)-fpm-alpine
@@ -46,9 +49,6 @@ external-tag-and-push-81: up2date
 
 	docker manifest push vemcogroup/php-cli:8.1 &
 	docker manifest push vemcogroup/php-cli:$(TAG)
-
-tag-and-push-80: up2date
-	docker buildx build --build-arg TAG=$(TAG) . --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:8.0 -t vemcogroup/php-cli:$(TAG) --push
 
 up2date:
 	@echo building $(TAG)
