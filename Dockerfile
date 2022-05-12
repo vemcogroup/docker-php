@@ -48,9 +48,6 @@ RUN set -ex \
     && docker-php-source delete \
 
     && pip install awscli \
-    && curl -sLO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl \
-    && mv kubectl /usr/bin/ \
-    && chmod +x /usr/bin/kubectl \
 
     && apk del build-dependencies \
     && rm -rf /tmp/*
@@ -75,6 +72,9 @@ ENV COMPOSER_HOME ./.composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # NEW LAYER
-
 FROM composer AS docker
 COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/docker-buildx
+
+# NEW LAYER
+FROM docker AS kubectl
+COPY --from=rancher/kubectl:v1.23.3 /bin/kubectl /usr/bin/kubectl
