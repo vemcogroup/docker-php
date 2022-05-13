@@ -7,3 +7,11 @@ DOCKER_HOST=ssh://${DOCKER_SERVER} docker pull php:${TAG}-fpm-alpine
 DOCKER_HOST=ssh://${DOCKER_SERVER} docker buildx build --build-arg TAG=${TAG} . --platform linux/amd64 -t vemcogroup/php-cli:8.0-amd64 --push &
 
 wait
+
+DOCKER_HOST=
+docker pull vemcogroup/php-cli:8.0-amd64
+
+docker manifest rm vemcogroup/php-cli:8.0 &
+docker manifest rm vemcogroup/php-cli:${TAG} &
+
+wait

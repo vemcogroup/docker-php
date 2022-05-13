@@ -1,4 +1,4 @@
-TAG = 8.0.18
+TAG = 8.0.19
 TAG_81 = 8.1.5
 DOCKER_SERVER = nuc
 
@@ -17,14 +17,6 @@ external-tag-and-push-80: up2date
 	docker pull php:$(TAG)-fpm-alpine
 
 	TAG=$(TAG) DOCKER_SERVER=$(DOCKER_SERVER) bash build.sh
-
-	DOCKER_HOST=
-	docker pull vemcogroup/php-cli:8.0-amd64
-
-	docker manifest rm vemcogroup/php-cli:8.0 &
-	docker manifest rm vemcogroup/php-cli:$(TAG) &
-
-	sleep 5
 
 	docker manifest create vemcogroup/php-cli:8.0 --amend vemcogroup/php-cli:8.0-amd64 --amend vemcogroup/php-cli:8.0-arm64 &
 	docker manifest create vemcogroup/php-cli:$(TAG) --amend vemcogroup/php-cli:8.0-amd64 --amend vemcogroup/php-cli:8.0-arm64
