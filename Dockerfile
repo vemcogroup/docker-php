@@ -5,8 +5,8 @@ ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
 
 RUN set -ex \
     && apk update \
-    && apk add --no-cache yarn docker lz4 lz4-dev libevent-dev mysql-client libpng freetype libzip icu libjpeg-turbo openssh-client git rsync curl jq python3 py-pip make zip libpq \
-    && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev libintl postgresql-dev \
+    && apk add --no-cache icu icu-data-full less yarn libintl docker lz4 lz4-dev libevent-dev mysql-client libpng freetype libzip libjpeg-turbo openssh-client git rsync curl jq python3 py-pip make zip libpq \
+    && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev postgresql-dev \
     && docker-php-source extract \
 
     && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/x64/) \
@@ -25,20 +25,10 @@ RUN set -ex \
         && cmake -DLOCALE_PROFILE=OFF -D CMAKE_INSTALL_PREFIX:PATH=/usr . && make && make install \
         && cd .. && rm -r musl-locales-master \
 
-    && mkdir -p /tmp/phpredis \
-        && curl -L https://pecl.php.net/get/redis | tar xvz -C /tmp/phpredis --strip 1 \
-        && cd /tmp/phpredis \
-        && phpize \
-        && ./configure --enable-redis-lz4 --with-liblz4=/usr/lib/ \
-        && make && make install \
-
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
-    # This is workaround for https://github.com/php/php-src/issues/7978, described in
-    # https://github.com/docker-library/php/issues/1245#issuecomment-1019957169
-    # This will be fixed in PHP 8.0.16.
-    && CFLAGS="$CFLAGS -D_GNU_SOURCE" docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets \
-    && pecl upgrade event-beta xdebug sqlsrv-5.10.0 pdo_sqlsrv-5.10.0 \
+    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets \
+    && pecl upgrade redis event-beta xdebug sqlsrv-5.10.1 pdo_sqlsrv-5.10.1 \
 
     && cd /tmp && curl -O https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/msodbcsql18_18.0.1.1-1_amd64.apk \
     && yes | apk add --allow-untrusted msodbcsql18_18.0.1.1-1_amd64.apk \
