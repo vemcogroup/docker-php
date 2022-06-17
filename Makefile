@@ -1,6 +1,6 @@
-TAG = 8.0.19
-TAG_81 = 8.1.6
-DOCKER_SERVER = hp01
+TAG = 8.0.20
+TAG_81 = 8.1.7
+DOCKER_SERVER = nuc
 
 build: up2date
 	docker pull php:$(TAG)-fpm-alpine

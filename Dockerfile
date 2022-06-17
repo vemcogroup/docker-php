@@ -1,6 +1,6 @@
 ARG TAG=${TAG}
 
-FROM php:${TAG}-fpm-alpine AS base
+FROM php:${TAG}-fpm-alpine3.16 AS base
 ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
 
 RUN set -ex \
