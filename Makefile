@@ -1,5 +1,5 @@
-TAG = 8.0.20
-TAG_81 = 8.1.7
+TAG = 8.0.21
+TAG_81 = 8.1.8
 DOCKER_SERVER = nuc
 
 build: up2date
