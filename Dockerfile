@@ -1,12 +1,12 @@
 ARG TAG=${TAG}
 
-FROM php:${TAG}-fpm-alpine3.16 AS base
+FROM php:${TAG}-fpm-alpine3.17 AS base
 ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
 
 RUN set -ex \
     && apk update \
     && apk add --no-cache icu icu-data-full less yarn libintl docker lz4 lz4-dev libevent-dev mysql-client libpng freetype libzip libjpeg-turbo openssh-client git rsync curl jq python3 py-pip make zip libpq \
-    && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev postgresql-dev \
+    && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev postgresql-dev linux-headers \
     && docker-php-source extract \
 
     && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/x64/) \

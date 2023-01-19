@@ -15,3 +15,13 @@ docker manifest rm vemcogroup/php-cli:8.1 &
 docker manifest rm vemcogroup/php-cli:${TAG} &
 
 wait
+
+docker manifest create vemcogroup/php-cli:8.1 --amend vemcogroup/php-cli:8.1-amd64 --amend vemcogroup/php-cli:8.1-arm64 &
+docker manifest create vemcogroup/php-cli:${TAG} --amend vemcogroup/php-cli:8.1-amd64 --amend vemcogroup/php-cli:8.1-arm64 &
+
+wait
+
+docker manifest push vemcogroup/php-cli:8.1 &
+docker manifest push vemcogroup/php-cli:${TAG} &
+
+wait
