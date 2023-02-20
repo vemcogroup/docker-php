@@ -68,4 +68,4 @@ COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/doc
 
 # NEW LAYER
 FROM docker AS kubectl
-COPY --from=rancher/kubectl:v1.23.3 /bin/kubectl /usr/bin/kubectl
+COPY --from=rancher/kubectl:v1.23.7 /bin/kubectl /usr/bin/kubectl
