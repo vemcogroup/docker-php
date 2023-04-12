@@ -12,6 +12,7 @@ DOCKER_HOST=
 docker pull vemcogroup/php-cli:next-amd64
 
 docker manifest rm vemcogroup/php-cli:next &
+docker manifest rm vemcogroup/php-cli:8.2 &
 docker manifest rm vemcogroup/php-cli:${TAG} &
 
 wait
