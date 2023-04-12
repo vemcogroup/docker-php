@@ -10,7 +10,7 @@ RUN set -ex \
     && docker-php-source extract \
 
     && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/x64/) \
-    && wget https://s3.amazonaws.com/atatus-artifacts/atatus-php/downloads/atatus-php-1.14.0-${arch}-musl.tar.gz -P /usr \
+    && wget https://s3.amazonaws.com/atatus-artifacts/atatus-php/downloads/atatus-php-1.15.0-${arch}-musl.tar.gz -P /usr \
     && cd /usr && tar -xzf atatus-php-*-musl.tar.gz \
     && cd atatus-php-*-musl \
     && sh install.sh && cd /usr && rm -fr atatus* \
