@@ -1,7 +1,8 @@
 ARG TAG=${TAG}
 
 FROM php:${TAG}-fpm-alpine3.17 AS base
-ENV MUSL_LOCPATH /usr/share/i18n/locales/musl
+ENV MUSL_LOCPATH /usr/share/i18n/locales/musl \
+    TZ UTC
 
 RUN set -ex \
     && apk update \
@@ -28,7 +29,7 @@ RUN set -ex \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets \
-    && pecl upgrade redis event-beta xdebug sqlsrv-5.10.1 pdo_sqlsrv-5.10.1 \
+    && pecl upgrade redis event-beta xdebug sqlsrv-5.11.0 pdo_sqlsrv-5.11.0 \
 \
     && cd /tmp && curl -O "https://download.microsoft.com/download/1/f/f/1fffb537-26ab-4947-a46a-7a45c27f6f77/msodbcsql18_18.2.1.1-1_amd64.apk" \
     && yes | apk add --allow-untrusted msodbcsql18_18.2.1.1-1_amd64.apk \
@@ -43,23 +44,22 @@ RUN set -ex \
     && apk del build-dependencies \
     && rm -rf /tmp/*
 
-COPY vemcount.ini /usr/local/etc/php/conf.d/vemcount.ini
-COPY www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY vemcount.ini www.conf /usr/local/etc/php/conf.d/
 
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
-
-RUN sed -i 's/access.log/;access.log/g' /usr/local/etc/php-fpm.d/docker.conf
-RUN sed -i 's/;log_level = notice/log_level = warning/g' /usr/local/etc/php-fpm.conf
-
-ENV TZ UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN mv /usr/local/etc/php/conf.d/www.conf /usr/local/etc/php-fpm.d/www.conf \
+    && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && sed -i 's/access.log/;access.log/g' /usr/local/etc/php-fpm.d/docker.conf \
+    && sed -i 's/;log_level = notice/log_level = warning/g' /usr/local/etc/php-fpm.conf \
+\
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ## NEW LAYER
 FROM base AS composer
 
-ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_MEMORY_LIMIT -1
-ENV COMPOSER_HOME ./.composer
+ENV COMPOSER_ALLOW_SUPERUSER 1 \
+    COMPOSER_MEMORY_LIMIT -1 \
+    COMPOSER_HOME ./.composer
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # NEW LAYER
