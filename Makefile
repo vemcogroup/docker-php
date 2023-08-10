@@ -1,5 +1,5 @@
-TAG = 8.1.20
-TAG_NEXT = 8.2.7
+TAG = 8.2.8
+TAG_NEXT = 8.3.0-BETA03
 DOCKER_SERVER = hp01
 
 build: up2date
