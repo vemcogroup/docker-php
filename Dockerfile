@@ -1,17 +1,17 @@
 ARG TAG=${TAG}
 
-FROM php:${TAG}-fpm-alpine3.18 AS base
-ENV MUSL_LOCPATH /usr/share/i18n/locales/musl \
-    TZ UTC
+FROM php:${TAG}-fpm-alpine3.19 AS base
+ENV MUSL_LOCPATH=/usr/share/i18n/locales/musl \
+    TZ=UTC
 
 RUN set -ex \
     && apk update \
-    && apk add --no-cache musl-locales icu icu-data-full less yarn libintl docker lz4 lz4-dev libevent-dev mysql-client libpng freetype libzip libjpeg-turbo openssh-client git rsync curl jq python3 py-pip make zip libpq \
+    && apk add --no-cache aws-cli musl-locales icu icu-data-full less yarn libintl docker lz4 lz4-dev libevent-dev mysql-client libpng freetype libzip libjpeg-turbo openssh-client git rsync curl jq python3 make zip libpq \
     && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev postgresql-dev linux-headers \
     && docker-php-source extract \
 \
     && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/x64/) \
-    && wget https://s3.amazonaws.com/atatus-artifacts/atatus-php/downloads/atatus-php-1.15.0-${arch}-musl.tar.gz -P /usr \
+    && wget https://s3.amazonaws.com/atatus-artifacts/atatus-php/downloads/atatus-php-1.16.0-${arch}-musl.tar.gz -P /usr \
     && cd /usr && tar -xzf atatus-php-*-musl.tar.gz \
     && cd atatus-php-*-musl \
     && sh install.sh && cd /usr && rm -fr atatus* \
@@ -22,11 +22,12 @@ RUN set -ex \
 \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
-    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets \
-    && pecl upgrade redis event-beta xdebug sqlsrv-5.11.0 pdo_sqlsrv-5.11.0 \
+    && docker-php-ext-configure ftp --with-openssl-dir=/usr \
+    && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets ftp \
+    && pecl upgrade redis event xdebug sqlsrv pdo_sqlsrv \
 \
     && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) \
-    && mssql_driver=msodbcsql18_18.3.1.1-1_${arch}.apk \
+    && mssql_driver=msodbcsql18_18.3.3.1-1_${arch}.apk \
     && cd /tmp && curl -O "https://download.microsoft.com/download/3/5/5/355d7943-a338-41a7-858d-53b259ea33f5/${mssql_driver}" \
     && yes | apk add --allow-untrusted ${mssql_driver} \
     && rm -fr ${mssql_driver} \
@@ -34,8 +35,6 @@ RUN set -ex \
     && docker-php-ext-enable redis \
     && docker-php-ext-enable --ini-name zz-event.ini event \
     && docker-php-source delete \
-\
-    && pip install awscli \
 \
     && apk del build-dependencies \
     && rm -rf /tmp/*
@@ -64,4 +63,4 @@ COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/doc
 
 # NEW LAYER
 FROM docker AS kubectl
-COPY --from=rancher/kubectl:v1.27.2 /bin/kubectl /usr/bin/kubectl
+COPY --from=rancher/kubectl:v1.30.2 /bin/kubectl /usr/bin/kubectl
