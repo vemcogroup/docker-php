@@ -11,7 +11,7 @@ if [ $? -ne 0 ]; then
     DOCKER_HOST=ssh://${DOCKER_SERVER} docker buildx create --name php_builder --use
 fi
 
-DOCKER_HOST=ssh://${DOCKER_SERVER} docker buildx build --name php_builder --build-arg TAG=${TAG} . --platform linux/amd64 -t vemcogroup/php-cli:next-amd64 --push &
+DOCKER_HOST=ssh://${DOCKER_SERVER} docker buildx build --builder php_builder --build-arg TAG=${TAG} . --platform linux/amd64 -t vemcogroup/php-cli:next-amd64 --push &
 
 wait
 
