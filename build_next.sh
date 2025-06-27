@@ -13,13 +13,17 @@ fi
 
 DOCKER_HOST=ssh://${DOCKER_SERVER} docker buildx build --builder php_builder --build-arg TAG=${TAG} . --platform linux/amd64 -t vemcogroup/php-cli:next-amd64 --push &
 
+echo "waiting..."
+
 wait
 
-DOCKER_HOST=
-docker pull vemcogroup/php-cli:next-amd64
+echo "wait done"
 
-docker buildx imagetools create -t vemcogroup/php-cli:next vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
-docker buildx imagetools create -t vemcogroup/php-cli:8.3 vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
+DOCKER_HOST=
+docker pull --platform linux/amd64 vemcogroup/php-cli:next-amd64
+
+docker buildx imagetools create -t vemcogroup/php-cli:8.4 vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
 docker buildx imagetools create -t vemcogroup/php-cli:${TAG} vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
+docker buildx imagetools create -t vemcogroup/php-cli:next vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
 
 wait

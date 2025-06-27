@@ -22,7 +22,16 @@ RUN set -ex \
 \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
-    && docker-php-ext-configure ftp --with-openssl-dir=/usr \
+#    && docker-php-ext-configure ftp --with-openssl-dir=/usr \
+
+    && PHP_VERSION="$(php -r 'echo PHP_VERSION;')"; \
+    case "$PHP_VERSION" in \
+      8.4.*) \
+        docker-php-ext-configure ftp --with-ftp-ssl ;; \
+      *) \
+        docker-php-ext-configure ftp --with-openssl-dir=/usr ;; \
+    esac \
+
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets ftp \
     && pecl upgrade redis event xdebug sqlsrv pdo_sqlsrv pcov \
 \

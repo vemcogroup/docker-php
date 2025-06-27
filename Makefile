@@ -1,5 +1,6 @@
-TAG = 8.2.25
-TAG_NEXT = 8.3.19
+TAG_PREV = 8.2.28
+TAG = 8.3.22
+TAG_NEXT = 8.4.8
 DOCKER_SERVER = hp01-local
 #DOCKER_SERVER = nuc
 
@@ -24,6 +25,13 @@ tag-and-push-next: up2date
 
 	docker pull php:$(TAG_NEXT)-fpm-alpine
 	docker buildx build --builder php_builder --no-cache --build-arg TAG=$(TAG_NEXT) . --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:next -t vemcogroup/php-cli:$(TAG_NEXT) --push
+
+
+external-tag-and-push-prev: up2date
+	@echo building $(TAG_PREV)
+	docker pull php:$(TAG_PREV)-fpm-alpine
+
+	TAG=$(TAG_PREV) DOCKER_SERVER=$(DOCKER_SERVER) bash build_prev.sh
 
 external-tag-and-push: up2date
 	@echo building $(TAG)
