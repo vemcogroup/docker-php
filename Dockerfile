@@ -6,7 +6,7 @@ ENV MUSL_LOCPATH=/usr/share/i18n/locales/musl \
 
 RUN set -ex \
     && apk update \
-    && apk add --no-cache aws-cli musl-locales icu icu-data-full less yarn libintl docker lz4 lz4-dev libevent-dev mysql-client libpng freetype libzip libjpeg-turbo openssh-client git rsync curl jq python3 make zip libpq \
+    && apk add --no-cache aws-cli musl-locales icu icu-data-full less yarn libintl docker lz4 lz4-dev zstd-dev libevent-dev mysql-client libpng freetype libzip libjpeg-turbo openssh-client git rsync curl jq python3 make zip libpq \
     && apk add --no-cache --virtual build-dependencies autoconf icu-dev libzip-dev libpng-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev postgresql-dev linux-headers \
     && docker-php-source extract \
 \
@@ -33,13 +33,19 @@ RUN set -ex \
     esac \
 
     && docker-php-ext-install -j$(nproc) pdo_mysql intl gd zip bcmath calendar pcntl exif opcache soap pgsql pdo_pgsql sockets ftp \
-    && pecl upgrade redis event xdebug sqlsrv pdo_sqlsrv pcov \
+    && pecl upgrade event xdebug sqlsrv pdo_sqlsrv pcov \
 \
     && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) \
     && mssql_driver=msodbcsql18_18.5.1.1-1_${arch}.apk \
     && cd /tmp && curl -O "https://download.microsoft.com/download/fae28b9a-d880-42fd-9b98-d779f0fdd77f/${mssql_driver}" \
     && yes | apk add --allow-untrusted ${mssql_driver} \
     && rm -fr ${mssql_driver} \
+    && pecl download redis \
+    && tar -xzf redis-*.tgz && cd redis-* \
+    && phpize \
+    && ./configure --enable-redis-lz4=yes --enable-redis-zstd=yes --with-liblz4=/usr/lib/ \
+    && make -j"$(nproc)" && make install \
+    && cd / && rm -rf /redis-* /usr/local/lib/php/doc/redis \
 \
     && docker-php-ext-enable redis \
     && docker-php-ext-enable --ini-name zz-event.ini event \
@@ -74,3 +80,5 @@ COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/doc
 # NEW LAYER
 FROM docker AS kubectl
 COPY --from=rancher/kubectl:v1.31.7 /bin/kubectl /usr/bin/kubectl
+
+COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bun
