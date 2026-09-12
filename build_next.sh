@@ -22,7 +22,7 @@ echo "wait done"
 DOCKER_HOST=
 docker pull --platform linux/amd64 vemcogroup/php-cli:next-amd64
 
-docker buildx imagetools create -t vemcogroup/php-cli:8.4 vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
+docker buildx imagetools create -t vemcogroup/php-cli:8.5 vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
 docker buildx imagetools create -t vemcogroup/php-cli:${TAG} vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
 docker buildx imagetools create -t vemcogroup/php-cli:next vemcogroup/php-cli:next-amd64 vemcogroup/php-cli:next-arm64 &
 

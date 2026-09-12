@@ -1,8 +1,7 @@
-TAG_PREV = 8.2.28
-TAG = 8.3.22
-TAG_NEXT = 8.4.13
-DOCKER_SERVER = hp01
-#DOCKER_SERVER = nuc
+TAG_PREV = 8.3.22
+TAG = 8.4.21
+TAG_NEXT = 8.5.10
+DOCKER_SERVER = hp01-local
 
 # Define a target to create and use the builder if it doesn't exist
 create_builder:
@@ -30,7 +29,7 @@ tag-and-push-next: up2date
 	@echo building $(TAG_NEXT)
 
 	docker pull php:$(TAG_NEXT)-fpm-alpine
-	docker buildx build --builder php_builder --no-cache --build-arg TAG=$(TAG_NEXT) . --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:8.4 -t vemcogroup/php-cli:next -t vemcogroup/php-cli:$(TAG_NEXT) --push
+	docker buildx build --builder php_builder --no-cache --build-arg TAG=$(TAG_NEXT) . --platform linux/amd64,linux/arm64 -t vemcogroup/php-cli:8.5 -t vemcogroup/php-cli:next -t vemcogroup/php-cli:$(TAG_NEXT) --push
 
 
 external-tag-and-push-prev: up2date
