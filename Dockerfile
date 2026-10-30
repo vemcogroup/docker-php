@@ -1,34 +1,30 @@
 ARG TAG=8.4
 
-FROM php:${TAG}-fpm-alpine AS base
-ARG CURL_VERSION=8.14.1
-ENV MUSL_LOCPATH=/usr/share/i18n/locales/musl \
-    TZ=UTC
+FROM php:${TAG}-fpm-trixie AS base
+ENV TZ=UTC
 
-RUN set -ex \
-    && apk add --no-cache aws-cli musl-locales icu icu-data-full less yarn libintl docker lz4 lz4-dev zstd-dev libevent-dev mysql-client libpng freetype libzip libjpeg-turbo openssh-client git rsync curl jq python3 make zip libpq \
-    && apk add --no-cache --virtual build-dependencies autoconf curl-dev openssl-dev icu-dev libzip-dev freetype-dev libpng-dev libxml2-dev libjpeg-turbo-dev g++ cmake musl-dev unixodbc-dev gcc gettext-dev postgresql-dev linux-headers \
+COPY --from=node:24-trixie-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:24-trixie-slim /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+
+RUN --mount=type=bind,from=ghcr.io/php/pie:1.4.9-bin,source=/pie,target=/usr/local/bin/pie set -ex \
+    && ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends awscli locales less docker-cli lz4 default-mysql-client openssh-client git rsync curl jq python3 make zip libstdc++6 tzdata libgssapi-krb5-2 libbrotli1 \
+    && dpkg --compare-versions "$(dpkg-query -W -f='${Version}' libbrotli1)" ge 1.1.0-2+deb13u1 \
+&& node -e 'const [major, minor, patch] = process.versions.node.split(".").map(Number); if (major !== 24 || minor < 22 || (minor === 22 && patch < 1)) throw new Error("Node 24.22.1 or newer is required");' \
+&& sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen \
+    && savedAptMark="$(apt-mark showmanual)" \
+    && apt-get install -y --no-install-recommends $PHPIZE_DEPS automake libtool libcurl4-openssl-dev libssl-dev libicu-dev libzip-dev libfreetype6-dev libpng-dev libxml2-dev libjpeg62-turbo-dev cmake unixodbc-dev libpq-dev liblz4-dev libzstd-dev libevent-dev zlib1g-dev \
+    && curl -fsSL https://packages.microsoft.com/config/debian/13/packages-microsoft-prod.deb -o /tmp/packages-microsoft-prod.deb \
+    && dpkg -i /tmp/packages-microsoft-prod.deb \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends msodbcsql18 \
+    && rm /tmp/packages-microsoft-prod.deb \
     && docker-php-source extract \
-    && cd /tmp \
-    && curl -fsSLO "https://curl.se/download/curl-${CURL_VERSION}.tar.gz" \
-    && tar -xzf "curl-${CURL_VERSION}.tar.gz" \
-    && cd "curl-${CURL_VERSION}" \
-    && ./configure \
-        --prefix=/usr/local \
-        --disable-static \
-        --enable-shared \
-        --enable-ntlm \
-        --with-openssl \
-        --with-zlib \
-    && make -j"$(nproc)" \
-    && make install \
-    && cd / \
-    && rm -rf "/tmp/curl-${CURL_VERSION}" "/tmp/curl-${CURL_VERSION}.tar.gz" \
-    && export PATH="/usr/local/bin:${PATH}" \
-        PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}" \
-        CPPFLAGS="-I/usr/local/include" \
-        LDFLAGS="-L/usr/local/lib" \
 \
+
 #    && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/x64/) \
 #    && wget https://s3.amazonaws.com/atatus-artifacts/atatus-php/downloads/atatus-php-1.17.1-${arch}-musl.tar.gz -P /usr \
 #    && cd /usr && tar -xzf atatus-php-*-musl.tar.gz \
@@ -39,37 +35,36 @@ RUN set -ex \
 #    && sed -i "s/laravel.enable_queues = false/laravel.enable.queues = true/g" /usr/local/etc/php/conf.d/atatus.ini \
 #    && sed -i "s/atatus.sql.capture = \"normalized\"/atatus.sql.capture = \"raw\"/g" /usr/local/etc/php/conf.d/atatus.ini \
 #\
-    && docker-php-ext-configure pgsql --with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-configure pgsql --with-pgsql=/usr \
     && docker-php-ext-configure gd --with-jpeg --with-freetype \
 \
-    && PHP_VERSION="$(php -r 'echo PHP_VERSION;')"; \
-    case "$PHP_VERSION" in \
+    && PHP_VERSION="$(php -r 'echo PHP_VERSION;')" \
+    && case "$PHP_VERSION" in \
       8.3.*) \
         docker-php-ext-configure ftp --with-openssl-dir=/usr \
-        && docker-php-ext-install opcache & ;; \
+        && docker-php-ext-install opcache ;; \
       8.4.*) \
         docker-php-ext-configure ftp --with-ftp-ssl \
-        && docker-php-ext-install opcache & ;; \
+        && docker-php-ext-install opcache ;; \
       *) \
         docker-php-ext-configure ftp --with-ftp-ssl ;; \
     esac \
 \
     && docker-php-ext-install -j$(nproc) curl pdo_mysql intl gd zip bcmath calendar pcntl exif soap pgsql pdo_pgsql sockets ftp \
     && php -r '$features = curl_version()["feature_list"] ?? []; if (($features["NTLM"] ?? false) !== true) { fwrite(STDERR, "libcurl NTLM support is required\\n"); exit(1); }' \
-    && pecl upgrade event xdebug sqlsrv pdo_sqlsrv pcov \
-\
-    && arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) \
-    && mssql_driver=msodbcsql18_18.6.1.1-1_${arch}.apk \
-    && cd /tmp && curl -O "https://download.microsoft.com/download/9dcab408-e0d4-4571-a81a-5a0951e3445f/${mssql_driver}" \
-    && yes | apk add --allow-untrusted ${mssql_driver} \
-    && rm -fr ${mssql_driver} \
-    && pecl download redis \
-    && tar -xzf redis-*.tgz && cd redis-* \
+    && git clone --depth=1 --branch 3.1.6 https://bitbucket.org/osmanov/pecl-event.git /tmp/php-event \
+    && test "$(git -C /tmp/php-event rev-parse HEAD)" = 63cb86c2699591591321c45bfcd8e5074896e020 \
+    && cd /tmp/php-event \
     && phpize \
-    && ./configure --enable-redis-lz4=yes --enable-redis-zstd=yes --with-liblz4=/usr/lib/ \
+    && ./configure --with-event-core --with-event-libevent-dir=/usr --with-event-openssl --with-event-extra --enable-event-sockets \
     && make -j"$(nproc)" && make install \
-    && cd / && rm -rf /redis-* /usr/local/lib/php/doc/redis \
-    \
+    && cd / && rm -rf /tmp/php-event \
+    && for extension in xdebug/xdebug:3.5.3 microsoft/sqlsrv:5.13.3 microsoft/pdo_sqlsrv:5.13.3 pecl/pcov:1.0.12; do \
+        pie install --no-interaction --skip-enable-extension --make-parallel-jobs="$(nproc)" "$extension" || exit 1; \
+    done \
+    && pie install --no-interaction --skip-enable-extension --make-parallel-jobs="$(nproc)" phpredis/phpredis:6.3.0 --enable-redis-lz4 --enable-redis-zstd --with-liblz4=/usr \
+    && rm -rf /root/.pie /root/.cache/composer \
+     \
     && git clone --recursive --depth=1 https://github.com/kjdev/php-ext-lz4.git /tmp/php-ext-lz4 \
     && cd /tmp/php-ext-lz4 \
     && phpize \
@@ -84,8 +79,17 @@ RUN set -ex \
     && docker-php-ext-enable --ini-name zz-event.ini event \
     && docker-php-source delete \
 \
-    && apk del build-dependencies \
-    && rm -rf /tmp/*
+    && apt-mark auto '.*' > /dev/null \
+    && apt-mark manual $savedAptMark msodbcsql18 packages-microsoft-prod \
+    && find /usr/local /opt/microsoft -type f \( -executable -o -name '*.so*' \) -exec ldd '{}' ';' \
+        | awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) next; sub("^/(usr/)?", "", so); print "*" so }' \
+        | sort -u \
+        | xargs -r dpkg-query --search \
+        | awk -F: '!/^diversion / { print $1 }' \
+        | sort -u \
+        | xargs -r apt-mark manual \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY vemcount.ini www.conf /usr/local/etc/php/conf.d/
 
@@ -95,7 +99,7 @@ RUN mv /usr/local/etc/php/conf.d/www.conf /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's/;log_level = notice/log_level = warning/g' /usr/local/etc/php-fpm.conf \
 \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
-    && echo -e "\n\n[client-mariadb]\ndisable-ssl-verify-server-cert" >> /etc/my.cnf
+    && printf '\n[client-mariadb]\nskip-ssl-verify-server-cert\n' >> /etc/mysql/mariadb.conf.d/50-client.cnf
 
 ## NEW LAYER
 FROM base AS composer
@@ -112,6 +116,6 @@ COPY --from=docker/buildx-bin:latest /buildx /usr/libexec/docker/cli-plugins/doc
 
 # NEW LAYER
 FROM docker AS kubectl
-COPY --from=rancher/kubectl:v1.34.5 /bin/kubectl /usr/local/bin/kubectl
+COPY --from=rancher/kubectl:v1.35.6 /bin/kubectl /usr/local/bin/kubectl
 
-COPY --from=oven/bun:alpine /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=oven/bun:debian /usr/local/bin/bun /usr/local/bin/bun
